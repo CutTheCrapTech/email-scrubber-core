@@ -1,0 +1,44 @@
+name: Update ClearURLs Rules
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1" # Every Monday at 03:00 UTC
+
+jobs:
+  fetch-and-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Download latest ClearURLs rules
+        run: |
+          curl -sSL "https://gitlab.com/ClearURLs/rules/-/raw/master/data.min.json" -o clearurls-data/rules.json
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add clearurls-data/rules.json
+          if git diff --cached --exit-code; then
+            echo "No changes to commit."
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected."
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push if updated
+        if: steps.git-check.outputs.changed == 'true'
+        run: |
+          git commit -m "chore: update ClearURLs rules [automated]" clearurls-data/rules.json
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
