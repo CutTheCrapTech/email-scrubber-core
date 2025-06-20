@@ -1,0 +1,46 @@
+name: Update ClearURLs Rules
+
+on:
+  workflow_dispatch: # Allows manual triggering
+  schedule:
+    - cron: "0 4 * * 1" # Every Monday at 04:00 UTC
+
+jobs:
+  update-rules:
+    name: Check for new ClearURLs rules
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Download latest ClearURLs rules
+        id: download
+        run: |
+          # Use curl to download the file and check the HTTP status code.
+          # The --fail flag ensures the command exits with an error if the download fails (e.g., 404).
+          curl --fail -sSL "https://gitlab.com/ClearURLs/rules/-/raw/master/data.min.json" -o clearurls-data/rules.json
+        # Continue to the next step even if curl fails, so we don't block the workflow on temporary network issues.
+        continue-on-error: true
+
+      - name: Create Pull Request if rules were updated
+        # This step only runs if the previous download step was successful.
+        if: steps.download.outcome == 'success'
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
+        with:
+          # Use a dedicated token for this action if you have one, otherwise GITHUB_TOKEN is fine.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(deps): update ClearURLs rules"
+          title: "Update ClearURLs Rules"
+          body: |
+            This is an automated PR to update the `clearurls-data/rules.json` file to the latest version from the official ClearURLs GitLab repository.
+
+            Please review the changes to ensure they are safe to merge.
+          branch: "chore/update-clearurls-rules"
+          delete-branch: true
+          # Assign labels to the PR for better organization.
+          labels: "dependencies, automated"
+          # Set an author for the commit.
+          author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          committer: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          sign-commits: true
