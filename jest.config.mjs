@@ -18,9 +18,7 @@ export default {
     customExportConditions: ['node', 'node-addons'],
   },
   extensionsToTreatAsEsm: ['.ts'],
-  transformIgnorePatterns: [
-    '/node_modules/(?!(linkedom|jsdom)/)',
-  ],
+  transformIgnorePatterns: ['/node_modules/(?!(linkedom|jsdom)/)'],
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.test.ts', '!src/**/*.d.ts'],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],

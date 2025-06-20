@@ -1,5 +1,9 @@
 import { sanitizeEmail, sanitizeEmailSimple } from '../sanitizer.js';
-import { sanitizerTestCases, assertSanitizerResult } from './email-scrubber-core-cases.ts';
+import {
+  sanitizerTestCases,
+  assertSanitizerResult,
+  type SanitizerTestCase,
+} from './email-scrubber-core-cases.js';
 import { createMinimalRules } from '../utils/fetchRules.js';
 import { jest } from '@jest/globals';
 
@@ -11,7 +15,7 @@ beforeAll(() => {
 
 describe('sanitizeEmail (shared cases)', () => {
   const minimalRules = createMinimalRules();
-  sanitizerTestCases.forEach((tc) => {
+  sanitizerTestCases.forEach((tc: SanitizerTestCase) => {
     it(tc.name, () => {
       const rules = tc.rules ?? minimalRules;
       const result = sanitizeEmail(tc.html, rules, tc.options);

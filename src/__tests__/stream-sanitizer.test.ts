@@ -1,4 +1,8 @@
-import { sanitizerTestCases, assertSanitizerResult } from './email-scrubber-core-cases.ts';
+import {
+  sanitizerTestCases,
+  assertSanitizerResult,
+  type SanitizerTestCase,
+} from './email-scrubber-core-cases.js';
 import { getStreamingHandlers } from '../stream-sanitizer.js';
 import { createMinimalRules } from '../utils/fetchRules.js';
 import { JSDOM } from 'jsdom';
@@ -90,7 +94,7 @@ function sanitizeEmailStreaming(
 
 describe('stream sanitizer (shared cases)', () => {
   const minimalRules = createMinimalRules();
-  sanitizerTestCases.forEach((tc) => {
+  sanitizerTestCases.forEach((tc: SanitizerTestCase) => {
     it(tc.name, () => {
       const rules = tc.rules ?? minimalRules;
       const result = sanitizeEmailStreaming(tc.html, rules, tc.options);
