@@ -1,5 +1,5 @@
 {
-  "name": "email-scrubber",
+  "name": "email-scrubber-core",
   "version": "1.0.0",
   "description": "A privacy-focused email sanitizer that removes trackers and cleans URLs, powered by the ClearURLs ruleset.",
   "main": "dist/index.js",

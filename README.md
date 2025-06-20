@@ -2,7 +2,7 @@
 
 A privacy-focused email sanitizer that removes trackers from URLs and HTML content.
 
-[![npm version](https://badge.fury.io/js/email-scrubber.svg)](https://www.npmjs.com/package/email-scrubber)
+[![npm version](https://badge.fury.io/js/email-scrubber-core.svg)](https://www.npmjs.com/package/email-scrubber-core)
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
 
 ## Features
@@ -48,7 +48,7 @@ The library removes `<img>` tags that are likely to be tracking pixels by checki
 ## Installation
 
 ```bash
-npm install email-scrubber
+npm install email-scrubber-core
 ```
 
 ## Quick Start
@@ -58,7 +58,7 @@ npm install email-scrubber
 This is the simplest way to use the library in a standard Node.js application.
 
 ```typescript
-import { sanitizeEmailBuffered, createMinimalRules } from "email-scrubber";
+import { sanitizeEmailBuffered, createMinimalRules } from 'email-scrubber-core';
 
 // Use the built-in minimal ruleset, which includes default cleaning.
 const rules = createMinimalRules();
@@ -80,7 +80,7 @@ const result = sanitizeEmailBuffered(dirtyEmail, rules);
 console.log(result.html);
 
 console.log(
-  `Cleaned ${result.urlsCleaned} URLs and removed ${result.trackingPixelsRemoved} tracking pixels.`,
+  `Cleaned ${result.urlsCleaned} URLs and removed ${result.trackingPixelsRemoved} tracking pixels.`
 );
 ```
 
@@ -90,7 +90,7 @@ This is the recommended, high-performance approach for edge environments. It tra
 
 ```typescript
 // In your Cloudflare Worker's main file:
-import { getStreamingHandlers, createMinimalRules } from "email-scrubber";
+import { getStreamingHandlers, createMinimalRules } from 'email-scrubber-core';
 
 export default {
   async fetch(request: Request): Promise<Response> {
@@ -103,8 +103,8 @@ export default {
 
     // Create an HTMLRewriter and attach the handlers.
     const rewriter = new HTMLRewriter()
-      .on("a[href]", handlers.linkHandler)
-      .on("img", handlers.pixelHandler);
+      .on('a[href]', handlers.linkHandler)
+      .on('img', handlers.pixelHandler);
 
     // Return the transformed response.
     return rewriter.transform(response);
