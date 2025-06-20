@@ -40,7 +40,8 @@
   },
   "homepage": "https://github.com/karteekiitg/email-scrubber#readme",
   "publishConfig": {
-    "provenance": true
+    "provenance": true,
+    "access": "public"
   },
   "dependencies": {
     "linkedom": "^0.18.11"
