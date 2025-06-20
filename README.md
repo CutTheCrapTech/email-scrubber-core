@@ -1,8 +1,8 @@
-# email-sanitizer
+# email-scrubber
 
 A privacy-focused email sanitizer that removes trackers from URLs and HTML content.
 
-[![npm version](https://badge.fury.io/js/email-sanitizer.svg)](https://www.npmjs.com/package/email-sanitizer)
+[![npm version](https://badge.fury.io/js/email-scrubber.svg)](https://www.npmjs.com/package/email-scrubber)
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
 
 ## Features
@@ -48,7 +48,7 @@ The library removes `<img>` tags that are likely to be tracking pixels by checki
 ## Installation
 
 ```bash
-npm install email-sanitizer
+npm install email-scrubber
 ```
 
 ## Quick Start
@@ -58,7 +58,7 @@ npm install email-sanitizer
 This is the simplest way to use the library in a standard Node.js application.
 
 ```typescript
-import { sanitizeEmailBuffered, createMinimalRules } from "email-sanitizer";
+import { sanitizeEmailBuffered, createMinimalRules } from "email-scrubber";
 
 // Use the built-in minimal ruleset, which includes default cleaning.
 const rules = createMinimalRules();
@@ -90,7 +90,7 @@ This is the recommended, high-performance approach for edge environments. It tra
 
 ```typescript
 // In your Cloudflare Worker's main file:
-import { getStreamingHandlers, createMinimalRules } from "email-sanitizer";
+import { getStreamingHandlers, createMinimalRules } from "email-scrubber";
 
 export default {
   async fetch(request: Request): Promise<Response> {
