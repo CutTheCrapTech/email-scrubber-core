@@ -4,18 +4,12 @@ import js from '@eslint/js';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
 /**
- * @type {import('eslint').Linter.FlatConfig[]}
+ * @type {import('eslint').Linter.Config[]}
  */
 export default [
   {
     // Global ignores
-    ignores: [
-      'dist/',
-      'node_modules/',
-      'coverage/',
-      '**/*.log',
-      '**/*.log.*',
-    ],
+    ignores: ['dist/', 'node_modules/', 'coverage/', '**/*.log', '**/*.log.*'],
   },
 
   // Base ESLint recommended config
