@@ -17,9 +17,10 @@ jobs:
     # These permissions are required for semantic-release to create releases,
     # push tags, and comment on issues/PRs.
     permissions:
-      contents: write
-      issues: write
-      pull-requests: write
+      contents: write # to be able to publish a GitHub release
+      issues: write # to be able to comment on released issues
+      pull-requests: write # to be able to comment on released pull requests
+      id-token: write # to enable use of OIDC for npm provenance
 
     steps:
       - name: Checkout repository
@@ -38,6 +39,9 @@ jobs:
       - name: Install dependencies
         # Using 'npm ci' is a best practice for CI environments as it's faster and more secure
         run: npm ci
+
+      - name: Run linter
+        run: npm run lint
 
       - name: Verify tests pass
         run: npm test

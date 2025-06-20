@@ -3,7 +3,7 @@
 # Its purpose is to ensure that tests are passing, providing a critical
 # safety check for all code changes, including automated dependency updates.
 
-name: Continuous Integration
+name: Continuous Integration Tests
 
 on:
   push:
