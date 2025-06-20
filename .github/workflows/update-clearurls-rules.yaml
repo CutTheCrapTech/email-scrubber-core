@@ -3,7 +3,7 @@ name: Update ClearURLs Rules
 on:
   workflow_dispatch: # Allows manual triggering
   schedule:
-    - cron: "0 4 * * 1" # Every Monday at 04:00 UTC
+    - cron: '0 4 * * 1' # Every Monday at 04:00 UTC
 
 jobs:
   update-rules:
@@ -24,23 +24,38 @@ jobs:
         continue-on-error: true
 
       - name: Create Pull Request if rules were updated
+        id: create_pr
         # This step only runs if the previous download step was successful.
         if: steps.download.outcome == 'success'
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
         with:
           # Use a dedicated token for this action if you have one, otherwise GITHUB_TOKEN is fine.
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore(deps): update ClearURLs rules"
-          title: "Update ClearURLs Rules"
+          commit-message: 'chore(deps): update ClearURLs rules'
+          title: 'Update ClearURLs Rules'
           body: |
             This is an automated PR to update the `clearurls-data/rules.json` file to the latest version from the official ClearURLs GitLab repository.
 
             Please review the changes to ensure they are safe to merge.
-          branch: "chore/update-clearurls-rules"
+          branch: 'chore/update-clearurls-rules'
           delete-branch: true
           # Assign labels to the PR for better organization.
-          labels: "dependencies, automated"
+          labels: 'dependencies, automated'
           # Set an author for the commit.
-          author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
-          committer: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          author: 'github-actions[bot] <github-actions[bot]@users.noreply.github.com>'
+          committer: 'github-actions[bot] <github-actions[bot]@users.noreply.github.com>'
           sign-commits: true
+
+      - name: Report Status
+        # This step runs every time to provide clear feedback.
+        if: always()
+        run: |
+          if [[ "${{ steps.download.outcome }}" != "success" ]]; then
+            echo "❌ Failed to download the latest ClearURLs rules. No action was taken."
+          elif [[ "${{ steps.create_pr.outputs.pull-request-operation }}" == "created" ]]; then
+            echo "✅ A new pull request was successfully created: ${{ steps.create_pr.outputs.pull-request-url }}"
+          elif [[ "${{ steps.create_pr.outputs.pull-request-operation }}" == "updated" ]]; then
+            echo "✅ The existing pull request was updated with new commits."
+          else
+            echo "ℹ️ No changes were detected in the rules file. No pull request was needed."
+          fi

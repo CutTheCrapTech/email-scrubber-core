@@ -1,5 +1,5 @@
 import { sanitizeEmail, sanitizeEmailSimple } from '../sanitizer.js';
-import { sanitizerTestCases, assertSanitizerResult } from './email-sanitizer-cases.js';
+import { sanitizerTestCases, assertSanitizerResult } from './email-scrubber-core-cases.ts';
 import { createMinimalRules } from '../utils/fetchRules.js';
 import { jest } from '@jest/globals';
 

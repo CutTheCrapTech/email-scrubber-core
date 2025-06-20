@@ -1,4 +1,4 @@
-import { sanitizerTestCases, assertSanitizerResult } from './email-sanitizer-cases.js';
+import { sanitizerTestCases, assertSanitizerResult } from './email-scrubber-core-cases.ts';
 import { getStreamingHandlers } from '../stream-sanitizer.js';
 import { createMinimalRules } from '../utils/fetchRules.js';
 import { JSDOM } from 'jsdom';

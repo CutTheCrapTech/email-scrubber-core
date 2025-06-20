@@ -8,7 +8,7 @@
  * @example
  * // Buffered (non-streaming) usage for Node.js or similar environments:
  * ```typescript
- * import { sanitizeEmailBuffered, createMinimalRules } from 'email-sanitizer';
+ * import { sanitizeEmailBuffered, createMinimalRules } from 'email-scrubber-core';
  *
  * const rules = createMinimalRules();
  * const originalHtml = '<a href="https://example.com/page?utm_source=news"><img src="https://track.com/pixel.gif"></a>';
@@ -20,7 +20,7 @@
  * // Streaming usage for edge environments (e.g., Cloudflare Workers):
  * ```typescript
  * // In your Cloudflare Worker:
- * import { getStreamingHandlers, createMinimalRules } from 'email-sanitizer';
+ * import { getStreamingHandlers, createMinimalRules } from 'email-scrubber-core';
  *
  * async function handleRequest(request) {
  *   const response = await fetch(request); // Get response from origin

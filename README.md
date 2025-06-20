@@ -1,4 +1,4 @@
-# email-scrubber
+# email-scrubber-core
 
 A privacy-focused email sanitizer that removes trackers from URLs and HTML content.
 
