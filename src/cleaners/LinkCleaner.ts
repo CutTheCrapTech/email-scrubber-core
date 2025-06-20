@@ -66,8 +66,8 @@ export class LinkCleaner {
   public clean(url: string | URL): URL {
     let urlObject: URL;
     try {
-      urlObject = typeof url === "string" ? new URL(url) : url;
-    } catch (e) {
+      urlObject = typeof url === 'string' ? new URL(url) : url;
+    } catch (_e) {
       // If the URL is invalid, we cannot process it.
       // Return the original input if it was a URL object, or throw if it was an invalid string.
       if (url instanceof URL) {
@@ -77,7 +77,7 @@ export class LinkCleaner {
     }
 
     // Apply the universal default rules first, if they exist.
-    const defaultProvider = this.rules.providers["*"];
+    const defaultProvider = this.rules.providers['*'];
     if (defaultProvider) {
       this.cleanParams(urlObject, defaultProvider);
     }
@@ -95,7 +95,7 @@ export class LinkCleaner {
               try {
                 // The redirected URL should also be cleaned.
                 return this.clean(decodeURIComponent(redirectUrl));
-              } catch (e) {
+              } catch (_e) {
                 // The redirect parameter was not a valid URL, so we ignore it.
               }
             }
@@ -118,21 +118,19 @@ export class LinkCleaner {
   private findProvider(urlObject: URL): ProviderRule | null {
     for (const domain in this.rules.providers) {
       // Skip the default provider in this lookup, as it's handled separately.
-      if (domain === "*") {
+      if (domain === '*') {
         continue;
       }
 
       const provider = this.rules.providers[domain];
       try {
-        const urlPattern = new RegExp(provider.urlPattern, "i");
+        const urlPattern = new RegExp(provider.urlPattern, 'i');
         if (urlPattern.test(urlObject.href)) {
           return provider;
         }
-      } catch (e) {
+      } catch (_e) {
         // Ignore invalid regex patterns in the rules.
-        console.error(
-          `Invalid regex for provider ${domain}: ${provider.urlPattern}`,
-        );
+        console.error(`Invalid regex for provider ${domain}: ${provider.urlPattern}`);
       }
     }
     return null;
@@ -154,8 +152,8 @@ export class LinkCleaner {
         // If the parameter is an exception, it should not be removed.
         const isException = provider.exceptions.some((exception) => {
           try {
-            return new RegExp(exception, "i").test(param);
-          } catch (e) {
+            return new RegExp(exception, 'i').test(param);
+          } catch (_e) {
             console.error(`Invalid exception regex: ${exception}`);
             return false;
           }

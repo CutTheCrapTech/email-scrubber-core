@@ -50,73 +50,73 @@ export interface TrackerPixelRemoverOptions {
 const DEFAULT_OPTIONS: Required<TrackerPixelRemoverOptions> = {
   maxPixelSize: 2,
   trackingDomains: [
-    "google-analytics.com",
-    "googletagmanager.com",
-    "doubleclick.net",
-    "facebook.com",
-    "connect.facebook.net",
-    "scorecardresearch.com",
-    "quantserve.com",
-    "outbrain.com",
-    "taboola.com",
-    "adsystem.com",
-    "amazon-adsystem.com",
-    "googlesyndication.com",
-    "googleadservices.com",
-    "twitter.com",
-    "linkedin.com",
-    "pinterest.com",
-    "snapchat.com",
-    "tiktok.com",
-    "hubspot.com",
-    "mailchimp.com",
-    "constantcontact.com",
-    "sendgrid.net",
-    "mailgun.org",
-    "createsend.com",
-    "campaign-monitor.com",
-    "aweber.com",
-    "getresponse.com",
-    "convertkit.com",
-    "activecampaign.com",
-    "drip.com",
-    "klaviyo.com",
-    "omnisend.com",
-    "sendinblue.com",
-    "emailoctopus.com",
-    "moosend.com",
-    "pardot.com",
-    "marketo.com",
-    "eloqua.com",
-    "salesforce.com",
+    'google-analytics.com',
+    'googletagmanager.com',
+    'doubleclick.net',
+    'facebook.com',
+    'connect.facebook.net',
+    'scorecardresearch.com',
+    'quantserve.com',
+    'outbrain.com',
+    'taboola.com',
+    'adsystem.com',
+    'amazon-adsystem.com',
+    'googlesyndication.com',
+    'googleadservices.com',
+    'twitter.com',
+    'linkedin.com',
+    'pinterest.com',
+    'snapchat.com',
+    'tiktok.com',
+    'hubspot.com',
+    'mailchimp.com',
+    'constantcontact.com',
+    'sendgrid.net',
+    'mailgun.org',
+    'createsend.com',
+    'campaign-monitor.com',
+    'aweber.com',
+    'getresponse.com',
+    'convertkit.com',
+    'activecampaign.com',
+    'drip.com',
+    'klaviyo.com',
+    'omnisend.com',
+    'sendinblue.com',
+    'emailoctopus.com',
+    'moosend.com',
+    'pardot.com',
+    'marketo.com',
+    'eloqua.com',
+    'salesforce.com',
   ],
   trackingParams: [
-    "utm_source",
-    "utm_medium",
-    "utm_campaign",
-    "utm_content",
-    "utm_term",
-    "fbclid",
-    "gclid",
-    "msclkid",
-    "twclid",
-    "li_fat_id",
-    "mc_cid",
-    "mc_eid",
-    "_hsenc",
-    "_hsmi",
-    "mkt_tok",
-    "vero_id",
-    "vero_conv",
-    "email_id",
-    "recipient_id",
-    "list_id",
-    "campaign_id",
-    "message_id",
-    "subscriber_id",
-    "tracking_id",
-    "pixel_id",
-    "beacon_id",
+    'utm_source',
+    'utm_medium',
+    'utm_campaign',
+    'utm_content',
+    'utm_term',
+    'fbclid',
+    'gclid',
+    'msclkid',
+    'twclid',
+    'li_fat_id',
+    'mc_cid',
+    'mc_eid',
+    '_hsenc',
+    '_hsmi',
+    'mkt_tok',
+    'vero_id',
+    'vero_conv',
+    'email_id',
+    'recipient_id',
+    'list_id',
+    'campaign_id',
+    'message_id',
+    'subscriber_id',
+    'tracking_id',
+    'pixel_id',
+    'beacon_id',
   ],
   removeNoAltImages: true,
   removeTransparentImages: true,
@@ -143,7 +143,7 @@ export class TrackerPixelRemover {
    */
   public clean(document: Document): number {
     // Find all img elements
-    const images = document.querySelectorAll("img");
+    const images = document.querySelectorAll('img');
     const imagesToRemove: (Element & SanitizableElement)[] = [];
 
     for (const img of Array.from(images)) {
@@ -186,8 +186,7 @@ export class TrackerPixelRemover {
     // Less definitive indicators - need multiple signals
     const hasSmallDimensions = this.hasTrackingPixelDimensions(img);
     const hasNoAlt = this.options.removeNoAltImages && this.hasNoAltText(img);
-    const isTransparent =
-      this.options.removeTransparentImages && this.isTransparent(img);
+    const isTransparent = this.options.removeTransparentImages && this.isTransparent(img);
 
     // Remove if it has small dimensions and no alt text
     if (hasSmallDimensions && hasNoAlt) {
@@ -213,19 +212,16 @@ export class TrackerPixelRemover {
    * @returns True if the image has tracking pixel dimensions.
    */
   private hasTrackingPixelDimensions(img: SanitizableElement): boolean {
-    const width = this.getDimension(img.getAttribute("width"));
-    const height = this.getDimension(img.getAttribute("height"));
+    const width = this.getDimension(img.getAttribute('width'));
+    const height = this.getDimension(img.getAttribute('height'));
 
     // Check explicit width/height attributes
     if (width !== null && height !== null) {
-      return (
-        width <= this.options.maxPixelSize &&
-        height <= this.options.maxPixelSize
-      );
+      return width <= this.options.maxPixelSize && height <= this.options.maxPixelSize;
     }
 
     // Check style attribute
-    const style = img.getAttribute("style");
+    const style = img.getAttribute('style');
     if (style) {
       const widthMatch = style.match(/width\s*:\s*(\d+)px/i);
       const heightMatch = style.match(/height\s*:\s*(\d+)px/i);
@@ -233,10 +229,7 @@ export class TrackerPixelRemover {
       if (widthMatch && heightMatch) {
         const styleWidth = parseInt(widthMatch[1], 10);
         const styleHeight = parseInt(heightMatch[1], 10);
-        return (
-          styleWidth <= this.options.maxPixelSize &&
-          styleHeight <= this.options.maxPixelSize
-        );
+        return styleWidth <= this.options.maxPixelSize && styleHeight <= this.options.maxPixelSize;
       }
     }
 
@@ -249,7 +242,7 @@ export class TrackerPixelRemover {
    * @returns True if the image source contains a tracking domain.
    */
   private hasTrackingDomain(img: SanitizableElement): boolean {
-    const src = img.getAttribute("src");
+    const src = img.getAttribute('src');
     if (!src) {
       return false;
     }
@@ -259,14 +252,12 @@ export class TrackerPixelRemover {
       const hostname = url.hostname.toLowerCase();
 
       return this.options.trackingDomains.some(
-        (domain) => hostname === domain || hostname.endsWith(`.${domain}`),
+        (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
       );
     } catch {
       // If URL parsing fails, check if any tracking domain is in the src string
       const srcLower = src.toLowerCase();
-      return this.options.trackingDomains.some((domain) =>
-        srcLower.includes(domain),
-      );
+      return this.options.trackingDomains.some((domain) => srcLower.includes(domain));
     }
   }
 
@@ -276,7 +267,7 @@ export class TrackerPixelRemover {
    * @returns True if the image URL contains tracking parameters.
    */
   private hasTrackingParameters(img: SanitizableElement): boolean {
-    const src = img.getAttribute("src");
+    const src = img.getAttribute('src');
     if (!src) {
       return false;
     }
@@ -293,9 +284,7 @@ export class TrackerPixelRemover {
     } catch {
       // If URL parsing fails, check if any tracking parameter is in the src string
       const srcLower = src.toLowerCase();
-      return this.options.trackingParams.some((param) =>
-        srcLower.includes(`${param}=`),
-      );
+      return this.options.trackingParams.some((param) => srcLower.includes(`${param}=`));
     }
 
     return false;
@@ -307,9 +296,9 @@ export class TrackerPixelRemover {
    * @returns True if the image has no alt text.
    */
   private hasNoAltText(img: SanitizableElement): boolean {
-    const alt = img.getAttribute("alt");
+    const alt = img.getAttribute('alt');
     // Consider it "no alt text" if the alt attribute is missing, empty, or only whitespace
-    return alt === null || alt.trim() === "";
+    return alt === null || alt.trim() === '';
   }
 
   /**
@@ -318,28 +307,28 @@ export class TrackerPixelRemover {
    * @returns True if the image appears to be transparent.
    */
   private isTransparent(img: SanitizableElement): boolean {
-    const src = img.getAttribute("src");
+    const src = img.getAttribute('src');
     if (!src) {
       return false;
     }
 
     // Check for transparent pixel data URLs
     const transparentGif =
-      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+      'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
     const transparentPng =
-      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 
     if (src === transparentGif || src === transparentPng) {
       return true;
     }
 
     // Check for other transparent data URLs
-    if (src.startsWith("data:image/") && src.includes("transparent")) {
+    if (src.startsWith('data:image/') && src.includes('transparent')) {
       return true;
     }
 
     // Check style for opacity
-    const style = img.getAttribute("style");
+    const style = img.getAttribute('style');
     if (style) {
       const opacityMatch = style.match(/opacity\s*:\s*([\d.]+)/i);
       if (opacityMatch) {
@@ -357,7 +346,7 @@ export class TrackerPixelRemover {
    * @returns True if the image is hidden.
    */
   private isHidden(img: SanitizableElement): boolean {
-    const style = img.getAttribute("style");
+    const style = img.getAttribute('style');
     if (!style) {
       return false;
     }
@@ -365,26 +354,17 @@ export class TrackerPixelRemover {
     const styleLower = style.toLowerCase();
 
     // Check for display: none
-    if (
-      styleLower.includes("display:none") ||
-      styleLower.includes("display: none")
-    ) {
+    if (styleLower.includes('display:none') || styleLower.includes('display: none')) {
       return true;
     }
 
     // Check for visibility: hidden
-    if (
-      styleLower.includes("visibility:hidden") ||
-      styleLower.includes("visibility: hidden")
-    ) {
+    if (styleLower.includes('visibility:hidden') || styleLower.includes('visibility: hidden')) {
       return true;
     }
 
     // Check for position: absolute with negative coordinates (common hiding technique)
-    if (
-      styleLower.includes("position:absolute") ||
-      styleLower.includes("position: absolute")
-    ) {
+    if (styleLower.includes('position:absolute') || styleLower.includes('position: absolute')) {
       const leftMatch = style.match(/left\s*:\s*(-?\d+)px/i);
       const topMatch = style.match(/top\s*:\s*(-?\d+)px/i);
 

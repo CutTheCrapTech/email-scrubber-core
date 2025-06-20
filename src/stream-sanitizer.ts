@@ -1,8 +1,5 @@
-import { LinkCleaner, type ClearUrlRules } from "./cleaners/LinkCleaner.js";
-import {
-  TrackerPixelRemover,
-  type SanitizableElement,
-} from "./cleaners/TrackerPixelRemover.js";
+import { LinkCleaner, type ClearUrlRules } from './cleaners/LinkCleaner.js';
+import { TrackerPixelRemover, type SanitizableElement } from './cleaners/TrackerPixelRemover.js';
 
 /**
  * An adapter that makes an HTMLRewriter element look like a SanitizableElement.
@@ -51,16 +48,13 @@ export function getStreamingHandlers(rules: ClearUrlRules) {
      */
     linkHandler: {
       element(element: Element) {
-        const href = element.getAttribute("href");
+        const href = element.getAttribute('href');
         if (href) {
           try {
             const cleanedUrl = linkCleaner.clean(href);
-            element.setAttribute("href", cleanedUrl.toString());
+            element.setAttribute('href', cleanedUrl.toString());
           } catch (error) {
-            console.warn(
-              `Failed to clean URL during streaming: ${href}`,
-              error,
-            );
+            console.warn(`Failed to clean URL during streaming: ${href}`, error);
           }
         }
       },

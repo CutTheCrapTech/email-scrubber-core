@@ -1,12 +1,13 @@
 // Shared test cases for sanitizer and stream-sanitizer
-import { createMinimalRules } from "../utils/fetchRules.js";
-import type { ClearUrlRules } from "../cleaners/LinkCleaner.js";
+import { createMinimalRules } from '../utils/fetchRules.js';
+import type { ClearUrlRules } from '../cleaners/LinkCleaner.js';
+import type { SanitizeEmailOptions, SanitizeEmailResult } from '../sanitizer.js';
 
 export interface SanitizerTestCase {
   name: string;
   html: string;
   rules?: ClearUrlRules;
-  options?: any;
+  options?: SanitizeEmailOptions;
   expectedHtml?: string;
   contains?: string[];
   notContains?: string[];
@@ -15,24 +16,24 @@ export interface SanitizerTestCase {
     trackingPixelsRemoved: number;
     wasModified: boolean;
   };
-  customAssert?: (result: any) => void;
+  customAssert?: (result: SanitizeEmailResult) => void;
 }
 
 const minimalRules = createMinimalRules();
 const mockClearUrlRules: ClearUrlRules = {
   providers: {
-    "google.com": {
-      urlPattern: "google\\.com",
-      rules: ["gclid", "utm_source", "utm_medium", "utm_campaign"],
-      exceptions: ["q"],
+    'google.com': {
+      urlPattern: 'google\\.com',
+      rules: ['gclid', 'utm_source', 'utm_medium', 'utm_campaign'],
+      exceptions: ['q'],
     },
-    "facebook.com": {
-      urlPattern: "facebook\\.com",
-      rules: ["fbclid", "utm_source"],
+    'facebook.com': {
+      urlPattern: 'facebook\\.com',
+      rules: ['fbclid', 'utm_source'],
     },
-    "tracking-domain.com": {
-      urlPattern: "tracking-domain\\.com",
-      rules: ["track_id"],
+    'tracking-domain.com': {
+      urlPattern: 'tracking-domain\\.com',
+      rules: ['track_id'],
     },
   },
 };
@@ -40,10 +41,10 @@ const mockClearUrlRules: ClearUrlRules = {
 export const sanitizerTestCases: SanitizerTestCase[] = [
   // Basic functionality
   {
-    name: "should return original HTML if no modifications needed",
-    html: "<div><p>Hello world</p></div>",
+    name: 'should return original HTML if no modifications needed',
+    html: '<div><p>Hello world</p></div>',
     rules: mockClearUrlRules,
-    expectedHtml: "<div><p>Hello world</p></div>",
+    expectedHtml: '<div><p>Hello world</p></div>',
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 0,
@@ -51,10 +52,10 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should handle empty HTML input",
-    html: "",
+    name: 'should handle empty HTML input',
+    html: '',
     rules: mockClearUrlRules,
-    expectedHtml: "",
+    expectedHtml: '',
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 0,
@@ -62,10 +63,10 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should handle whitespace-only HTML input",
-    html: "   ",
+    name: 'should handle whitespace-only HTML input',
+    html: '   ',
     rules: mockClearUrlRules,
-    expectedHtml: "   ",
+    expectedHtml: '   ',
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 0,
@@ -74,11 +75,11 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
   },
   // URL cleaning functionality
   {
-    name: "should clean tracking parameters from URLs",
+    name: 'should clean tracking parameters from URLs',
     html: '<a href="https://google.com/search?q=test&gclid=123&utm_source=email">Search</a>',
     rules: mockClearUrlRules,
     contains: ['href="https://google.com/search?q=test"'],
-    notContains: ["gclid", "utm_source"],
+    notContains: ['gclid', 'utm_source'],
     expectedStats: {
       urlsCleaned: 1,
       trackingPixelsRemoved: 0,
@@ -86,7 +87,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should clean multiple URLs in the same document",
+    name: 'should clean multiple URLs in the same document',
     html: `
         <div>
           <a href="https://google.com/page1?gclid=123">Link 1</a>
@@ -96,11 +97,11 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
       `,
     rules: mockClearUrlRules,
     contains: [
-      "https://google.com/page1",
-      "https://facebook.com/page2",
-      "https://example.com/clean",
+      'https://google.com/page1',
+      'https://facebook.com/page2',
+      'https://example.com/clean',
     ],
-    notContains: ["gclid", "fbclid"],
+    notContains: ['gclid', 'fbclid'],
     expectedStats: {
       urlsCleaned: 2,
       trackingPixelsRemoved: 0,
@@ -108,7 +109,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should preserve URLs without tracking parameters",
+    name: 'should preserve URLs without tracking parameters',
     html: '<a href="https://example.com/page?param=value">Clean Link</a>',
     rules: mockClearUrlRules,
     contains: ['href="https://example.com/page?param=value"'],
@@ -119,7 +120,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should handle malformed URLs gracefully",
+    name: 'should handle malformed URLs gracefully',
     html: '<a href="not-a-valid-url">Invalid Link</a>',
     rules: mockClearUrlRules,
     contains: ['href="not-a-valid-url"'],
@@ -134,11 +135,11 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should apply default cleaning rules to a domain not in the providers list",
+    name: 'should apply default cleaning rules to a domain not in the providers list',
     html: `<a href="https://a-random-site.net/some/path?utm_source=some-ad&id=real">Click Here</a>`,
     rules: minimalRules,
     contains: ['href="https://a-random-site.net/some/path?id=real"'],
-    notContains: ["utm_source"],
+    notContains: ['utm_source'],
     expectedStats: {
       urlsCleaned: 1,
       trackingPixelsRemoved: 0,
@@ -147,7 +148,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
   },
   // Tracking pixel removal functionality
   {
-    name: "should remove tracking pixels",
+    name: 'should remove tracking pixels',
     html: `
         <div>
           <p>Content</p>
@@ -156,8 +157,8 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
         </div>
       `,
     rules: mockClearUrlRules,
-    contains: ["example.com/image.jpg"],
-    notContains: ["google-analytics.com"],
+    contains: ['example.com/image.jpg'],
+    notContains: ['google-analytics.com'],
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 1,
@@ -165,7 +166,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should remove multiple tracking pixels",
+    name: 'should remove multiple tracking pixels',
     html: `
         <div>
           <img src="https://google-analytics.com/pixel1.gif" width="1" height="1">
@@ -174,7 +175,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
         </div>
       `,
     rules: mockClearUrlRules,
-    notContains: ["google-analytics.com", "facebook.com", "doubleclick.net"],
+    notContains: ['google-analytics.com', 'facebook.com', 'doubleclick.net'],
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 3,
@@ -182,7 +183,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should preserve legitimate images",
+    name: 'should preserve legitimate images',
     html: `
         <div>
           <img src="https://example.com/logo.jpg" alt="Company Logo" width="100" height="50">
@@ -190,7 +191,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
         </div>
       `,
     rules: mockClearUrlRules,
-    contains: ["logo.jpg", "banner.png"],
+    contains: ['logo.jpg', 'banner.png'],
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 0,
@@ -199,7 +200,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
   },
   // Combined functionality
   {
-    name: "should clean URLs and remove tracking pixels simultaneously",
+    name: 'should clean URLs and remove tracking pixels simultaneously',
     html: `
         <div>
           <a href="https://google.com/page?gclid=123&utm_source=email">Tracked Link</a>
@@ -210,12 +211,8 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
         </div>
       `,
     rules: mockClearUrlRules,
-    contains: [
-      "https://google.com/page",
-      "example.com/clean",
-      "example.com/image.jpg",
-    ],
-    notContains: ["gclid", "google-analytics.com"],
+    contains: ['https://google.com/page', 'example.com/clean', 'example.com/image.jpg'],
+    notContains: ['gclid', 'google-analytics.com'],
     expectedStats: {
       urlsCleaned: 1,
       trackingPixelsRemoved: 1,
@@ -224,7 +221,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
   },
   // --- Migrated from sanitizer_old.test.ts ---
   {
-    name: "should handle complex email with multiple tracking elements",
+    name: 'should handle complex email with multiple tracking elements',
     html: `
       <!DOCTYPE html>
       <html>
@@ -250,20 +247,20 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     `,
     rules: mockClearUrlRules,
     contains: [
-      "https://google.com/products",
-      "https://facebook.com/page",
-      "product1.jpg",
-      "product2.jpg",
-      "Newsletter",
-      "latest products",
+      'https://google.com/products',
+      'https://facebook.com/page',
+      'product1.jpg',
+      'product2.jpg',
+      'Newsletter',
+      'latest products',
     ],
     notContains: [
-      "utm_source",
-      "gclid",
-      "fbclid",
-      "google-analytics.com",
-      "facebook.com/tr",
-      "mailchimp.com",
+      'utm_source',
+      'gclid',
+      'fbclid',
+      'google-analytics.com',
+      'facebook.com/tr',
+      'mailchimp.com',
     ],
     expectedStats: {
       urlsCleaned: 2,
@@ -272,11 +269,11 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should skip URL cleaning when cleanUrls is false",
+    name: 'should skip URL cleaning when cleanUrls is false',
     html: '<a href="https://google.com/page?gclid=123">Link</a>',
     rules: mockClearUrlRules,
     options: { cleanUrls: false },
-    contains: ["gclid=123"],
+    contains: ['gclid=123'],
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 0,
@@ -284,11 +281,11 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should clean URLs when cleanUrls is true (default)",
+    name: 'should clean URLs when cleanUrls is true (default)',
     html: '<a href="https://google.com/page?gclid=123">Link</a>',
     rules: mockClearUrlRules,
     options: { cleanUrls: true },
-    notContains: ["gclid=123"],
+    notContains: ['gclid=123'],
     expectedStats: {
       urlsCleaned: 1,
       trackingPixelsRemoved: 0,
@@ -296,11 +293,11 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should skip pixel removal when removeTrackingPixels is false",
+    name: 'should skip pixel removal when removeTrackingPixels is false',
     html: '<img src="https://google-analytics.com/pixel.gif" width="1" height="1">',
     rules: mockClearUrlRules,
     options: { removeTrackingPixels: false },
-    contains: ["google-analytics.com"],
+    contains: ['google-analytics.com'],
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 0,
@@ -308,11 +305,11 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should remove pixels when removeTrackingPixels is true (default)",
+    name: 'should remove pixels when removeTrackingPixels is true (default)',
     html: '<img src="https://google-analytics.com/pixel.gif" width="1" height="1">',
     rules: mockClearUrlRules,
     options: { removeTrackingPixels: true },
-    notContains: ["google-analytics.com"],
+    notContains: ['google-analytics.com'],
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 1,
@@ -320,11 +317,11 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should preserve full document structure when true (default)",
-    html: "<!DOCTYPE html><html><head><title>Test</title></head><body><p>Content</p></body></html>",
+    name: 'should preserve full document structure when true (default)',
+    html: '<!DOCTYPE html><html><head><title>Test</title></head><body><p>Content</p></body></html>',
     rules: mockClearUrlRules,
     options: { preserveDocumentStructure: true },
-    contains: ["<!DOCTYPE html>", "<html>", "<head>", "<title>"],
+    contains: ['<!DOCTYPE html>', '<html>', '<head>', '<title>'],
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 0,
@@ -332,7 +329,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should extract body content when preserveDocumentStructure is false and modifications were made",
+    name: 'should extract body content when preserveDocumentStructure is false and modifications were made',
     html: `
       <!DOCTYPE html>
       <html>
@@ -345,8 +342,8 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     `,
     rules: mockClearUrlRules,
     options: { preserveDocumentStructure: false },
-    notContains: ["<!DOCTYPE html>", "<html>", "<head>"],
-    contains: ["<p>Content</p>"],
+    notContains: ['<!DOCTYPE html>', '<html>', '<head>'],
+    contains: ['<p>Content</p>'],
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 1,
@@ -354,12 +351,12 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should return full document when preserveDocumentStructure is false but no modifications were made",
-    html: "<!DOCTYPE html><html><head><title>Test</title></head><body><p>Content</p></body></html>",
+    name: 'should return full document when preserveDocumentStructure is false but no modifications were made',
+    html: '<!DOCTYPE html><html><head><title>Test</title></head><body><p>Content</p></body></html>',
     rules: mockClearUrlRules,
     options: { preserveDocumentStructure: false },
     expectedHtml:
-      "<!DOCTYPE html><html><head><title>Test</title></head><body><p>Content</p></body></html>",
+      '<!DOCTYPE html><html><head><title>Test</title></head><body><p>Content</p></body></html>',
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 0,
@@ -367,11 +364,11 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should pass options to TrackerPixelRemover",
+    name: 'should pass options to TrackerPixelRemover',
     html: '<img src="https://example.com/pixel.gif" width="5" height="5">',
     rules: mockClearUrlRules,
     options: { trackerPixelOptions: { maxPixelSize: 10 } },
-    notContains: ["<img"],
+    notContains: ['<img'],
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 1,
@@ -379,10 +376,10 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should handle malformed HTML gracefully",
+    name: 'should handle malformed HTML gracefully',
     html: '<div><p>Unclosed tags<img src="test"',
     rules: mockClearUrlRules,
-    contains: ["Unclosed tags"],
+    contains: ['Unclosed tags'],
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 0,
@@ -390,7 +387,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should handle body extraction failure gracefully",
+    name: 'should handle body extraction failure gracefully',
     html: '<img src="https://google-analytics.com/pixel.gif" width="1" height="1">',
     rules: mockClearUrlRules,
     options: { preserveDocumentStructure: false },
@@ -401,11 +398,11 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should handle HTML with no links or images",
-    html: "<div><h1>Title</h1><p>Just text content with <strong>formatting</strong>.</p></div>",
+    name: 'should handle HTML with no links or images',
+    html: '<div><h1>Title</h1><p>Just text content with <strong>formatting</strong>.</p></div>',
     rules: mockClearUrlRules,
     expectedHtml:
-      "<div><h1>Title</h1><p>Just text content with <strong>formatting</strong>.</p></div>",
+      '<div><h1>Title</h1><p>Just text content with <strong>formatting</strong>.</p></div>',
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 0,
@@ -413,7 +410,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should handle HTML with only clean links and legitimate images",
+    name: 'should handle HTML with only clean links and legitimate images',
     html: `
       <div>
         <a href="https://example.com/page">Clean Link</a>
@@ -421,7 +418,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
       </div>
     `,
     rules: mockClearUrlRules,
-    contains: ["example.com/page", "example.com/image.jpg"],
+    contains: ['example.com/page', 'example.com/image.jpg'],
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 0,
@@ -429,10 +426,10 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should handle very large HTML documents",
-    html: `<div>${"content ".repeat(10000)}<img src="https://google-analytics.com/pixel.gif" width="1" height="1"></div>`,
+    name: 'should handle very large HTML documents',
+    html: `<div>${'content '.repeat(10000)}<img src="https://google-analytics.com/pixel.gif" width="1" height="1"></div>`,
     rules: mockClearUrlRules,
-    notContains: ["google-analytics.com"],
+    notContains: ['google-analytics.com'],
     expectedStats: {
       urlsCleaned: 0,
       trackingPixelsRemoved: 1,
@@ -440,7 +437,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should handle HTML with special characters and encoding",
+    name: 'should handle HTML with special characters and encoding',
     html: `
       <div>
         <p>Special chars: àáâãäåæçèéêë</p>
@@ -449,8 +446,8 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
       </div>
     `,
     rules: mockClearUrlRules,
-    contains: ["àáâãäåæçèéêë", "test+query"],
-    notContains: ["gclid"],
+    contains: ['àáâãäåæçèéêë', 'test+query'],
+    notContains: ['gclid'],
     expectedStats: {
       urlsCleaned: 1,
       trackingPixelsRemoved: 0,
@@ -458,7 +455,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should accurately count cleaned URLs",
+    name: 'should accurately count cleaned URLs',
     html: `
       <div>
         <a href="https://google.com/page1?gclid=123">Link 1</a>
@@ -475,7 +472,7 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should accurately count removed tracking pixels",
+    name: 'should accurately count removed tracking pixels',
     html: `
       <div>
         <img src="https://google-analytics.com/pixel1.gif" width="1" height="1">
@@ -492,8 +489,8 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
-    name: "should set wasModified correctly",
-    html: "<div><p>Clean content</p></div>",
+    name: 'should set wasModified correctly',
+    html: '<div><p>Clean content</p></div>',
     rules: mockClearUrlRules,
     expectedStats: {
       urlsCleaned: 0,
@@ -504,14 +501,9 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
   // ... (add any remaining cases as needed)
 ];
 
-export function assertSanitizerResult(
-  result: any,
-  testCase: SanitizerTestCase,
-) {
+export function assertSanitizerResult(result: SanitizeEmailResult, testCase: SanitizerTestCase) {
   if (testCase.expectedHtml !== undefined) {
-    expect(result.html.replace(/\s+/g, "")).toBe(
-      testCase.expectedHtml.replace(/\s+/g, ""),
-    );
+    expect(result.html.replace(/\s+/g, '')).toBe(testCase.expectedHtml.replace(/\s+/g, ''));
   }
   if (testCase.contains) {
     for (const str of testCase.contains) {
@@ -524,9 +516,7 @@ export function assertSanitizerResult(
     }
   }
   expect(result.urlsCleaned).toBe(testCase.expectedStats.urlsCleaned);
-  expect(result.trackingPixelsRemoved).toBe(
-    testCase.expectedStats.trackingPixelsRemoved,
-  );
+  expect(result.trackingPixelsRemoved).toBe(testCase.expectedStats.trackingPixelsRemoved);
   expect(result.wasModified).toBe(testCase.expectedStats.wasModified);
   if (testCase.customAssert) testCase.customAssert(result);
 }

@@ -1,9 +1,6 @@
-import { parseHTML } from "linkedom";
-import { LinkCleaner, ClearUrlRules } from "./cleaners/LinkCleaner.js";
-import {
-  TrackerPixelRemover,
-  TrackerPixelRemoverOptions,
-} from "./cleaners/TrackerPixelRemover.js";
+import { parseHTML } from 'linkedom';
+import { LinkCleaner, ClearUrlRules } from './cleaners/LinkCleaner.js';
+import { TrackerPixelRemover, TrackerPixelRemoverOptions } from './cleaners/TrackerPixelRemover.js';
 
 /**
  * Options for the email sanitizer.
@@ -70,7 +67,7 @@ export interface SanitizeEmailResult {
 export function sanitizeEmail(
   html: string,
   clearUrlRules: ClearUrlRules,
-  options: SanitizeEmailOptions = {},
+  options: SanitizeEmailOptions = {}
 ): SanitizeEmailResult {
   const {
     trackerPixelOptions = {},
@@ -80,7 +77,7 @@ export function sanitizeEmail(
   } = options;
 
   // Early return for empty content
-  if (!html || html.trim() === "") {
+  if (!html || html.trim() === '') {
     return {
       html,
       urlsCleaned: 0,
@@ -89,7 +86,7 @@ export function sanitizeEmail(
     };
   }
 
-  let result: SanitizeEmailResult = {
+  const result: SanitizeEmailResult = {
     html,
     urlsCleaned: 0,
     trackingPixelsRemoved: 0,
@@ -104,17 +101,17 @@ export function sanitizeEmail(
     // Clean URLs if enabled
     if (cleanUrls) {
       const linkCleaner = new LinkCleaner(clearUrlRules);
-      const links = document.querySelectorAll("a[href]");
+      const links = document.querySelectorAll('a[href]');
 
       for (const link of Array.from(links)) {
-        const originalHref = link.getAttribute("href");
+        const originalHref = link.getAttribute('href');
         if (originalHref) {
           try {
             const cleanedUrl = linkCleaner.clean(originalHref);
             const cleanedHref = cleanedUrl.toString();
 
             if (cleanedHref !== originalHref) {
-              link.setAttribute("href", cleanedHref);
+              link.setAttribute('href', cleanedHref);
               urlsCleaned++;
             }
           } catch (error) {
@@ -140,7 +137,7 @@ export function sanitizeEmail(
     if (result.wasModified) {
       if (!preserveDocumentStructure) {
         // If document structure is not preserved, return only the body content
-        const body = document.querySelector("body");
+        const body = document.querySelector('body');
         result.html = body ? body.innerHTML : document.toString();
       } else {
         // Otherwise, return the full document
@@ -149,7 +146,7 @@ export function sanitizeEmail(
     }
   } catch (error) {
     // If parsing fails, return the original HTML
-    console.error("Error sanitizing email HTML:", error);
+    console.error('Error sanitizing email HTML:', error);
     return {
       html,
       urlsCleaned: 0,
@@ -172,7 +169,7 @@ export function sanitizeEmail(
 export function sanitizeEmailSimple(
   html: string,
   clearUrlRules: ClearUrlRules,
-  options: SanitizeEmailOptions = {},
+  options: SanitizeEmailOptions = {}
 ): string {
   return sanitizeEmail(html, clearUrlRules, options).html;
 }

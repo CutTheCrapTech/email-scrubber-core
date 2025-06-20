@@ -1,29 +1,30 @@
-import {
-  sanitizerTestCases,
-  assertSanitizerResult,
-} from "./email-sanitizer-cases.js";
-import { getStreamingHandlers } from "../stream-sanitizer.js";
-import { createMinimalRules } from "../utils/fetchRules.js";
-import { JSDOM } from "jsdom";
-import { TrackerPixelRemover } from "../cleaners/TrackerPixelRemover.js";
-import { jest } from "@jest/globals";
+import { sanitizerTestCases, assertSanitizerResult } from './email-sanitizer-cases.js';
+import { getStreamingHandlers } from '../stream-sanitizer.js';
+import { createMinimalRules } from '../utils/fetchRules.js';
+import { JSDOM } from 'jsdom';
+import { TrackerPixelRemover } from '../cleaners/TrackerPixelRemover.js';
+import { jest } from '@jest/globals';
+import type { ClearUrlRules } from '../cleaners/LinkCleaner.js';
+import type { SanitizeEmailOptions } from '../sanitizer.js';
 
 // The test suite includes cases with invalid URLs, which are expected to log warnings.
 // We mock the console here to prevent that output from cluttering the test results.
 beforeAll(() => {
-  jest.spyOn(console, "warn").mockImplementation(() => {});
+  jest.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
 // Helper: Simulate streaming sanitizer for test cases
-function sanitizeEmailStreaming(html: string, rules: any, options?: any) {
+function sanitizeEmailStreaming(
+  html: string,
+  rules: ClearUrlRules,
+  options?: SanitizeEmailOptions
+) {
   const opts = options || {};
   const cleanUrls = opts.cleanUrls !== undefined ? opts.cleanUrls : true;
   const removeTrackingPixels =
     opts.removeTrackingPixels !== undefined ? opts.removeTrackingPixels : true;
   const preserveDocumentStructure =
-    opts.preserveDocumentStructure !== undefined
-      ? opts.preserveDocumentStructure
-      : true;
+    opts.preserveDocumentStructure !== undefined ? opts.preserveDocumentStructure : true;
   const trackerPixelOptions = opts.trackerPixelOptions || {};
 
   const { linkHandler, pixelHandler } = getStreamingHandlers(rules);
@@ -34,10 +35,10 @@ function sanitizeEmailStreaming(html: string, rules: any, options?: any) {
   const originalHtml = html;
 
   if (cleanUrls) {
-    dom.window.document.querySelectorAll("a[href]").forEach((el: Element) => {
-      const before = el.getAttribute("href");
+    dom.window.document.querySelectorAll('a[href]').forEach((el: Element) => {
+      const before = el.getAttribute('href');
       linkHandler.element(el);
-      const after = el.getAttribute("href");
+      const after = el.getAttribute('href');
       if (before !== after) {
         urlsCleaned++;
         wasModified = true;
@@ -46,7 +47,7 @@ function sanitizeEmailStreaming(html: string, rules: any, options?: any) {
   }
 
   if (removeTrackingPixels) {
-    const imgs = Array.from(dom.window.document.querySelectorAll("img"));
+    const imgs = Array.from(dom.window.document.querySelectorAll('img'));
     for (const el of imgs) {
       const parent = el.parentNode;
       if (Object.keys(trackerPixelOptions).length > 0) {
@@ -87,7 +88,7 @@ function sanitizeEmailStreaming(html: string, rules: any, options?: any) {
   };
 }
 
-describe("stream sanitizer (shared cases)", () => {
+describe('stream sanitizer (shared cases)', () => {
   const minimalRules = createMinimalRules();
   sanitizerTestCases.forEach((tc) => {
     it(tc.name, () => {

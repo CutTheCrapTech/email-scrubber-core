@@ -44,19 +44,20 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250619.0",
+    "@eslint/js": "^9.29.0",
     "@types/jest": "^29.5.14",
     "@types/jsdom": "^21.1.7",
-    "@typescript-eslint/eslint-plugin": "^8.34.1",
-    "@typescript-eslint/parser": "^8.34.1",
     "eslint": "^9.29.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.5.0",
+    "globals": "^15.9.0",
     "jest": "^30.0.2",
     "jsdom": "^26.1.0",
     "prettier": "^3.5.3",
     "semantic-release": "^24.2.5",
     "ts-jest": "^29.4.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.34.1"
   },
   "files": [
     "dist",
