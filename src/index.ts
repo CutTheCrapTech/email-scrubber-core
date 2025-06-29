@@ -36,29 +36,26 @@
  * ```
  */
 
-// Buffered (non-streaming) functions for standard Node.js environments
-export {
-  sanitizeEmail as sanitizeEmailBuffered,
-  sanitizeEmailSimple as sanitizeEmailSimpleBuffered,
-  type SanitizeEmailOptions,
-  type SanitizeEmailResult,
-} from './sanitizer.js';
-
-// Handlers for streaming environments (e.g., Cloudflare Workers)
-export { getStreamingHandlers } from './stream-sanitizer.js';
-
 // Link cleaning functionality
-export { LinkCleaner, type ClearUrlRules } from './cleaners/LinkCleaner.js';
-
+export { type ClearUrlRules, LinkCleaner } from "./cleaners/LinkCleaner.js";
 // Tracking pixel removal functionality
 export {
-  TrackerPixelRemover,
-  type SanitizableElement,
-  type TrackerPixelRemoverOptions,
-} from './cleaners/TrackerPixelRemover.js';
+	type SanitizableElement,
+	TrackerPixelRemover,
+	type TrackerPixelRemoverOptions,
+} from "./cleaners/TrackerPixelRemover.js";
+// Buffered (non-streaming) functions for standard Node.js environments
+export {
+	type SanitizeEmailOptions,
+	type SanitizeEmailResult,
+	sanitizeEmail as sanitizeEmailBuffered,
+	sanitizeEmailSimple as sanitizeEmailSimpleBuffered,
+} from "./sanitizer.js";
+// Handlers for streaming environments (e.g., Cloudflare Workers)
+export { getStreamingHandlers } from "./stream-sanitizer.js";
 
 // Utility function to fetch ClearURLs rules
-export { createMinimalRules } from './utils/fetchRules.js';
+export { createMinimalRules } from "./utils/fetchRules.js";
 
 // Version information
-export const VERSION = '1.0.0';
+export const VERSION = "1.0.0";

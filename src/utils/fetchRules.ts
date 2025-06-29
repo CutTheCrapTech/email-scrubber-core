@@ -1,5 +1,5 @@
-import { ClearUrlRules } from '../cleaners/LinkCleaner.js';
-import rules from '../../clearurls-data/rules.json' with { type: 'json' };
+import rules from "../../clearurls-data/rules.json" with { type: "json" };
+import type { ClearUrlRules } from "../cleaners/LinkCleaner.js";
 
 /**
  * Loads the statically downloaded ClearURLs rules.
@@ -8,7 +8,7 @@ import rules from '../../clearurls-data/rules.json' with { type: 'json' };
  * @returns The ClearURLs rules object.
  */
 export function loadClearUrlRules(): ClearUrlRules {
-  return rules as ClearUrlRules;
+	return rules as ClearUrlRules;
 }
 
 /**
@@ -18,65 +18,101 @@ export function loadClearUrlRules(): ClearUrlRules {
  * @returns A minimal ClearURLs rules object.
  */
 export function createMinimalRules(): ClearUrlRules {
-  return {
-    providers: {
-      '*': {
-        urlPattern: '.*',
-        rules: [
-          // Common UTM parameters
-          'utm_source',
-          'utm_medium',
-          'utm_campaign',
-          'utm_term',
-          'utm_content',
-          'utm_id',
-          'utm_name',
-          // Facebook Click Identifier
-          'fbclid',
-          // Google Click Identifier
-          'gclid',
-          // Microsoft Click Identifier
-          'msclkid',
-          // Mailchimp Click Identifiers
-          'mc_cid',
-          'mc_eid',
-          // HubSpot Click Identifiers
-          '_hsenc',
-          '_hsmi',
-        ],
-      },
-      'google.com': {
-        urlPattern: 'google\\.com',
-        rules: [
-          'gclid',
-          'gclsrc',
-          'utm_source',
-          'utm_medium',
-          'utm_campaign',
-          'utm_term',
-          'utm_content',
-        ],
-      },
-      'facebook.com': {
-        urlPattern: 'facebook\\.com',
-        rules: ['fbclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'],
-      },
-      'twitter.com': {
-        urlPattern: 'twitter\\.com',
-        rules: ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'twclid'],
-      },
-      'linkedin.com': {
-        urlPattern: 'linkedin\\.com',
-        rules: ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'li_fat_id'],
-      },
-      'amazon.com': {
-        urlPattern: 'amazon\\.com',
-        rules: ['ref', 'tag', 'linkCode', 'creative', 'creativeASIN', 'camp', 'adid'],
-      },
-      'youtube.com': {
-        urlPattern: 'youtube\\.com',
-        rules: ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'feature'],
-      },
-    },
-  };
+	return {
+		providers: {
+			"*": {
+				urlPattern: ".*",
+				rules: [
+					// Common UTM parameters
+					"utm_source",
+					"utm_medium",
+					"utm_campaign",
+					"utm_term",
+					"utm_content",
+					"utm_id",
+					"utm_name",
+					// Facebook Click Identifier
+					"fbclid",
+					// Google Click Identifier
+					"gclid",
+					// Microsoft Click Identifier
+					"msclkid",
+					// Mailchimp Click Identifiers
+					"mc_cid",
+					"mc_eid",
+					// HubSpot Click Identifiers
+					"_hsenc",
+					"_hsmi",
+				],
+			},
+			"google.com": {
+				urlPattern: "google\\.com",
+				rules: [
+					"gclid",
+					"gclsrc",
+					"utm_source",
+					"utm_medium",
+					"utm_campaign",
+					"utm_term",
+					"utm_content",
+				],
+			},
+			"facebook.com": {
+				urlPattern: "facebook\\.com",
+				rules: [
+					"fbclid",
+					"utm_source",
+					"utm_medium",
+					"utm_campaign",
+					"utm_term",
+					"utm_content",
+				],
+			},
+			"twitter.com": {
+				urlPattern: "twitter\\.com",
+				rules: [
+					"utm_source",
+					"utm_medium",
+					"utm_campaign",
+					"utm_term",
+					"utm_content",
+					"twclid",
+				],
+			},
+			"linkedin.com": {
+				urlPattern: "linkedin\\.com",
+				rules: [
+					"utm_source",
+					"utm_medium",
+					"utm_campaign",
+					"utm_term",
+					"utm_content",
+					"li_fat_id",
+				],
+			},
+			"amazon.com": {
+				urlPattern: "amazon\\.com",
+				rules: [
+					"ref",
+					"tag",
+					"linkCode",
+					"creative",
+					"creativeASIN",
+					"camp",
+					"adid",
+				],
+			},
+			"youtube.com": {
+				urlPattern: "youtube\\.com",
+				rules: [
+					"utm_source",
+					"utm_medium",
+					"utm_campaign",
+					"utm_term",
+					"utm_content",
+					"feature",
+				],
+			},
+		},
+	};
 }
