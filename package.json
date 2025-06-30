@@ -18,7 +18,8 @@
     "lint:ci": "biome ci .",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "check": "npm run type-check:all && npm run lint && npm run test",
-    "ci": "npm run check && npm run build",
+    "check:ci": "npm run type-check:all && npm run lint:ci && npm run test",
+    "ci": "npm run check:ci && npm run build",
     "prepublishOnly": "npm run build",
     "semantic-release": "npx semantic-release"
   },

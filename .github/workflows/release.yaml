@@ -40,11 +40,8 @@ jobs:
         # Using 'npm ci' is a best practice for CI environments as it's faster and more secure
         run: npm ci
 
-      - name: Run linter
-        run: npm run lint
-
-      - name: Verify tests pass
-        run: npm test
+      - name: Run comprehensive CI checks
+        run: npm run ci
 
       - name: Create Release
         # This command runs semantic-release, which will handle the full release process.
