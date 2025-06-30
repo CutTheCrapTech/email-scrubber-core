@@ -24,7 +24,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/karteekiitg/email-scrubber-core.git"
+    "url": "git+https://github.com/CutTheCrapTech/email-scrubber-core.git"
   },
   "keywords": [
     "email",
@@ -41,12 +41,12 @@
     "cloudflare",
     "worker"
   ],
-  "author": "karteekiitg",
+  "author": "CutTheCrapTech",
   "license": "LGPL-3.0",
   "bugs": {
-    "url": "https://github.com/karteekiitg/email-scrubber-core/issues"
+    "url": "https://github.com/CutTheCrapTech/email-scrubber-core/issues"
   },
-  "homepage": "https://github.com/karteekiitg/email-scrubber-core#readme",
+  "homepage": "https://github.com/CutTheCrapTech/email-scrubber-core#readme",
   "publishConfig": {
     "provenance": true,
     "access": "public"
