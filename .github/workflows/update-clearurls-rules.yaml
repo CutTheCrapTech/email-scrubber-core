@@ -15,65 +15,67 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Download latest ClearURLs rules
         id: download
         run: |
-          # Create directory if it doesn't exist
-          mkdir -p clearurls-data
-
-          # Use curl to download the file and check the HTTP status code.
-          # The --fail flag ensures the command exits with an error if the download fails (e.g., 404).
-          curl --fail -sSL "https://gitlab.com/ClearURLs/rules/-/raw/master/data.min.json" -o clearurls-data/rules.json
+          # Download to a temporary location outside the repo
+          curl --fail -sSL "https://gitlab.com/ClearURLs/rules/-/raw/master/data.min.json" -o /tmp/rules.json
         # Continue to the next step even if curl fails, so we don't block the workflow on temporary network issues.
         continue-on-error: true
 
-      - name: Configure Git
+      - name: Format downloaded JSON with Biome
+        id: format
         if: steps.download.outcome == 'success'
+        run: |
+          # Format the downloaded file with your project's Biome configuration
+          npx biome format --write /tmp/rules.json
+        continue-on-error: true
+
+      - name: Configure Git
+        if: steps.download.outcome == 'success' && steps.format.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Check if file has changes
         id: check_changes
-        if: steps.download.outcome == 'success'
+        if: steps.download.outcome == 'success' && steps.format.outcome == 'success'
         run: |
-          # Check if the JSON content is actually different (not just formatting)
-          if [ -f clearurls-data/rules.json ]; then
-            # Normalize both files for comparison
-            if command -v jq >/dev/null 2>&1; then
-              # Compare normalized JSON content
-              jq -S -c . clearurls-data/rules.json > /tmp/new_rules.json 2>/dev/null || cp clearurls-data/rules.json /tmp/new_rules.json
+          # Reset the entire working directory to clean state
+          git checkout HEAD -- .
 
-              if git show HEAD:clearurls-data/rules.json 2>/dev/null | jq -S -c . > /tmp/old_rules.json 2>/dev/null; then
-                if cmp -s /tmp/new_rules.json /tmp/old_rules.json; then
-                  echo "has_changes=false" >> $GITHUB_OUTPUT
-                  echo "ℹ️ No meaningful changes detected (only formatting differences)"
-                else
-                  echo "has_changes=true" >> $GITHUB_OUTPUT
-                fi
-              else
-                # File doesn't exist in git yet, so it's a new file
-                echo "has_changes=true" >> $GITHUB_OUTPUT
-              fi
+          # Create directory if it doesn't exist
+          mkdir -p clearurls-data
 
-              # Cleanup
-              rm -f /tmp/new_rules.json /tmp/old_rules.json
-            else
-              # Fallback to regular git diff if jq is not available
-              if git diff --quiet clearurls-data/rules.json; then
-                echo "has_changes=false" >> $GITHUB_OUTPUT
-              else
-                echo "has_changes=true" >> $GITHUB_OUTPUT
-              fi
-            fi
-          else
+          # Copy the formatted file from temp location to repo
+          cp /tmp/rules.json clearurls-data/rules.json
+
+          # Now check if there are any changes
+          if git diff --quiet --exit-code clearurls-data/rules.json; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No changes detected in the rules file"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "✅ Changes detected in the rules file"
+
+            # Show a summary of what changed (for debugging)
+            echo "📝 Summary of changes:"
+            git diff --stat clearurls-data/rules.json || true
           fi
 
       - name: Create Pull Request if rules were updated
         id: create_pr
-        # This step only runs if download was successful AND there are changes
-        if: steps.download.outcome == 'success' && steps.check_changes.outputs.has_changes == 'true'
+        # This step only runs if download was successful AND formatting worked AND there are changes
+        if: steps.download.outcome == 'success' && steps.format.outcome == 'success' && steps.check_changes.outputs.has_changes == 'true'
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
         with:
           # GITHUB_TOKEN should now work with proper repository permissions
@@ -85,6 +87,7 @@ jobs:
 
             **Changes:**
             - Updated ClearURLs rules to latest version
+            - Formatted with Biome to match project standards
             - Automated update from scheduled workflow
 
             Please review the changes to ensure they are safe to merge.
@@ -99,6 +102,12 @@ jobs:
           author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
           committer: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
 
+      - name: Cleanup on failure
+        if: failure()
+        run: |
+          # Remove the temporary file if anything failed
+          rm -f /tmp/rules.json
+
       - name: Report Status
         # This step runs every time to provide clear feedback.
         if: always()
@@ -106,6 +115,9 @@ jobs:
           if [[ "${{ steps.download.outcome }}" != "success" ]]; then
             echo "❌ Failed to download the latest ClearURLs rules. No action was taken."
             echo "This could be due to network issues or the source being temporarily unavailable."
+          elif [[ "${{ steps.format.outcome }}" != "success" ]]; then
+            echo "❌ Failed to format the downloaded rules with Biome. No action was taken."
+            echo "This could be due to invalid JSON or Biome configuration issues."
           elif [[ "${{ steps.check_changes.outputs.has_changes }}" != "true" ]]; then
             echo "ℹ️ No changes were detected in the rules file. No pull request was needed."
           elif [[ "${{ steps.create_pr.outputs.pull-request-operation }}" == "created" ]]; then
