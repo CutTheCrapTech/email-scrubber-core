@@ -1,78 +1,83 @@
 {
-	"name": "email-scrubber-core",
-	"version": "1.0.0",
-	"description": "A privacy-focused email sanitizer that removes trackers and cleans URLs, powered by the ClearURLs ruleset.",
-	"main": "dist/index.js",
-	"module": "dist/index.js",
-	"types": "dist/index.d.ts",
-	"type": "module",
-	"scripts": {
-		"build": "tsc",
-		"format": "biome format --write .",
-		"lint": "biome check .",
-		"lint:fix": "biome check --write .",
-		"lint:unsafe_fix": "biome check --write --unsafe .",
-		"lint:ci": "biome ci .",
-		"test": "NODE_OPTIONS=--experimental-vm-modules jest",
-		"prepublishOnly": "npm run build",
-		"semantic-release": "npx semantic-release"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/karteekiitg/email-scrubber-core.git"
-	},
-	"keywords": [
-		"email",
-		"sanitizer",
-		"privacy",
-		"tracker",
-		"cleaner",
-		"clearurls",
-		"url-cleaning",
-		"tracking-removal",
-		"email-security",
-		"html-cleaning",
-		"typescript",
-		"cloudflare",
-		"worker"
-	],
-	"author": "karteekiitg",
-	"license": "LGPL-3.0",
-	"bugs": {
-		"url": "https://github.com/karteekiitg/email-scrubber-core/issues"
-	},
-	"homepage": "https://github.com/karteekiitg/email-scrubber-core#readme",
-	"publishConfig": {
-		"provenance": true,
-		"access": "public"
-	},
-	"engines": {
-		"node": ">=22.0.0",
-		"npm": ">=10.0.0"
-	},
-	"dependencies": {
-		"linkedom": "^0.18.11"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.0.6",
-		"@cloudflare/workers-types": "^4.20250620.0",
-		"@types/jest": "^30.0.0",
-		"@types/jsdom": "^21.1.7",
-		"globals": "^16.2.0",
-		"jest": "^30.0.2",
-		"jsdom": "^26.1.0",
-		"semantic-release": "^24.2.5",
-		"ts-jest": "^29.4.0",
-		"typescript": "^5.8.3"
-	},
-	"files": [
-		"dist",
-		"LICENSE",
-		"README.md"
-	],
-	"release": {
-		"branches": [
-			"main"
-		]
-	}
+  "name": "email-scrubber-core",
+  "version": "1.0.0",
+  "description": "A privacy-focused email sanitizer that removes trackers and cleans URLs, powered by the ClearURLs ruleset.",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "type-check:test": "tsc --noEmit --project tsconfig.test.json",
+    "type-check:all": "npm run type-check && npm run type-check:test",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "lint:unsafe_fix": "biome check --write --unsafe .",
+    "lint:ci": "biome ci .",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "check": "npm run type-check:all && npm run lint && npm run test",
+    "ci": "npm run check && npm run build",
+    "prepublishOnly": "npm run build",
+    "semantic-release": "npx semantic-release"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/karteekiitg/email-scrubber-core.git"
+  },
+  "keywords": [
+    "email",
+    "sanitizer",
+    "privacy",
+    "tracker",
+    "cleaner",
+    "clearurls",
+    "url-cleaning",
+    "tracking-removal",
+    "email-security",
+    "html-cleaning",
+    "typescript",
+    "cloudflare",
+    "worker"
+  ],
+  "author": "karteekiitg",
+  "license": "LGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/karteekiitg/email-scrubber-core/issues"
+  },
+  "homepage": "https://github.com/karteekiitg/email-scrubber-core#readme",
+  "publishConfig": {
+    "provenance": true,
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "linkedom": "^0.18.11"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.6",
+    "@cloudflare/workers-types": "^4.20250620.0",
+    "@types/jest": "^30.0.0",
+    "@types/jsdom": "^21.1.7",
+    "globals": "^16.2.0",
+    "jest": "^30.0.2",
+    "jsdom": "^26.1.0",
+    "semantic-release": "^24.2.5",
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.8.3"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "release": {
+    "branches": [
+      "main"
+    ]
+  }
 }

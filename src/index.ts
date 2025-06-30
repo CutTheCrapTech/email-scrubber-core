@@ -40,16 +40,16 @@
 export { type ClearUrlRules, LinkCleaner } from "./cleaners/LinkCleaner.js";
 // Tracking pixel removal functionality
 export {
-	type SanitizableElement,
-	TrackerPixelRemover,
-	type TrackerPixelRemoverOptions,
+  type SanitizableElement,
+  TrackerPixelRemover,
+  type TrackerPixelRemoverOptions,
 } from "./cleaners/TrackerPixelRemover.js";
 // Buffered (non-streaming) functions for standard Node.js environments
 export {
-	type SanitizeEmailOptions,
-	type SanitizeEmailResult,
-	sanitizeEmail as sanitizeEmailBuffered,
-	sanitizeEmailSimple as sanitizeEmailSimpleBuffered,
+  type SanitizeEmailOptions,
+  type SanitizeEmailResult,
+  sanitizeEmail as sanitizeEmailBuffered,
+  sanitizeEmailSimple as sanitizeEmailSimpleBuffered,
 } from "./sanitizer.js";
 // Handlers for streaming environments (e.g., Cloudflare Workers)
 export { getStreamingHandlers } from "./stream-sanitizer.js";
