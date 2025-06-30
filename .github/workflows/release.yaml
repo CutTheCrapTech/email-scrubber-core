@@ -33,8 +33,8 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           # Use the latest Long-Term Support version of Node.js
-          node-version: 'lts/*'
-          cache: 'npm'
+          node-version: "lts/*"
+          cache: "npm"
 
       - name: Install dependencies
         # Using 'npm ci' is a best practice for CI environments as it's faster and more secure

@@ -1,10 +1,8 @@
 name: Update ClearURLs Rules
-
 on:
   workflow_dispatch: # Allows manual triggering
   schedule:
-    - cron: '0 4 * * 1' # Every Monday at 04:00 UTC
-
+    - cron: "0 4 * * 1" # Every Monday at 04:00 UTC
 jobs:
   update-rules:
     name: Check for new ClearURLs rules
@@ -12,7 +10,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -20,34 +18,86 @@ jobs:
       - name: Download latest ClearURLs rules
         id: download
         run: |
+          # Create directory if it doesn't exist
+          mkdir -p clearurls-data
+
           # Use curl to download the file and check the HTTP status code.
           # The --fail flag ensures the command exits with an error if the download fails (e.g., 404).
           curl --fail -sSL "https://gitlab.com/ClearURLs/rules/-/raw/master/data.min.json" -o clearurls-data/rules.json
         # Continue to the next step even if curl fails, so we don't block the workflow on temporary network issues.
         continue-on-error: true
 
+      - name: Configure Git
+        if: steps.download.outcome == 'success'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check if file has changes
+        id: check_changes
+        if: steps.download.outcome == 'success'
+        run: |
+          # Check if the JSON content is actually different (not just formatting)
+          if [ -f clearurls-data/rules.json ]; then
+            # Normalize both files for comparison
+            if command -v jq >/dev/null 2>&1; then
+              # Compare normalized JSON content
+              jq -S -c . clearurls-data/rules.json > /tmp/new_rules.json 2>/dev/null || cp clearurls-data/rules.json /tmp/new_rules.json
+
+              if git show HEAD:clearurls-data/rules.json 2>/dev/null | jq -S -c . > /tmp/old_rules.json 2>/dev/null; then
+                if cmp -s /tmp/new_rules.json /tmp/old_rules.json; then
+                  echo "has_changes=false" >> $GITHUB_OUTPUT
+                  echo "ℹ️ No meaningful changes detected (only formatting differences)"
+                else
+                  echo "has_changes=true" >> $GITHUB_OUTPUT
+                fi
+              else
+                # File doesn't exist in git yet, so it's a new file
+                echo "has_changes=true" >> $GITHUB_OUTPUT
+              fi
+
+              # Cleanup
+              rm -f /tmp/new_rules.json /tmp/old_rules.json
+            else
+              # Fallback to regular git diff if jq is not available
+              if git diff --quiet clearurls-data/rules.json; then
+                echo "has_changes=false" >> $GITHUB_OUTPUT
+              else
+                echo "has_changes=true" >> $GITHUB_OUTPUT
+              fi
+            fi
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create Pull Request if rules were updated
         id: create_pr
-        # This step only runs if the previous download step was successful.
-        if: steps.download.outcome == 'success'
+        # This step only runs if download was successful AND there are changes
+        if: steps.download.outcome == 'success' && steps.check_changes.outputs.has_changes == 'true'
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
         with:
-          # Use a dedicated token for this action if you have one, otherwise GITHUB_TOKEN is fine.
+          # GITHUB_TOKEN should now work with proper repository permissions
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chore(deps): update ClearURLs rules'
-          title: 'Update ClearURLs Rules'
+          commit-message: "chore(deps): update ClearURLs rules"
+          title: "Update ClearURLs Rules"
           body: |
             This is an automated PR to update the `clearurls-data/rules.json` file to the latest version from the official ClearURLs GitLab repository.
 
+            **Changes:**
+            - Updated ClearURLs rules to latest version
+            - Automated update from scheduled workflow
+
             Please review the changes to ensure they are safe to merge.
-          branch: 'chore/update-clearurls-rules'
+
+            ---
+            *This PR was automatically created by GitHub Actions.*
+          branch: "chore/update-clearurls-rules"
           delete-branch: true
           # Assign labels to the PR for better organization.
-          labels: 'dependencies, automated'
+          labels: "dependencies, automated"
           # Set an author for the commit.
-          author: 'github-actions[bot] <github-actions[bot]@users.noreply.github.com>'
-          committer: 'github-actions[bot] <github-actions[bot]@users.noreply.github.com>'
-          sign-commits: true
+          author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          committer: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
 
       - name: Report Status
         # This step runs every time to provide clear feedback.
@@ -55,10 +105,13 @@ jobs:
         run: |
           if [[ "${{ steps.download.outcome }}" != "success" ]]; then
             echo "❌ Failed to download the latest ClearURLs rules. No action was taken."
+            echo "This could be due to network issues or the source being temporarily unavailable."
+          elif [[ "${{ steps.check_changes.outputs.has_changes }}" != "true" ]]; then
+            echo "ℹ️ No changes were detected in the rules file. No pull request was needed."
           elif [[ "${{ steps.create_pr.outputs.pull-request-operation }}" == "created" ]]; then
             echo "✅ A new pull request was successfully created: ${{ steps.create_pr.outputs.pull-request-url }}"
           elif [[ "${{ steps.create_pr.outputs.pull-request-operation }}" == "updated" ]]; then
             echo "✅ The existing pull request was updated with new commits."
           else
-            echo "ℹ️ No changes were detected in the rules file. No pull request was needed."
+            echo "⚠️ Unexpected state: Changes detected but no PR operation reported."
           fi
