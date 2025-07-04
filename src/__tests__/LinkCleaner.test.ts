@@ -203,6 +203,9 @@ describe("LinkCleaner", () => {
       });
 
       it("should handle providers with invalid regex patterns", () => {
+        const consoleSpy = jest
+          .spyOn(console, "error")
+          .mockImplementation(() => {});
         const rulesWithInvalidRegex: ClearUrlRules = {
           providers: {
             "bad-regex.com": {
@@ -211,25 +214,24 @@ describe("LinkCleaner", () => {
             },
           },
         };
-
         const cleanerWithBadRegex = new LinkCleaner(rulesWithInvalidRegex);
-        const consoleSpy = jest
-          .spyOn(console, "error")
-          .mockImplementation(() => {});
-
         const url = "https://bad-regex.com/page?param1=value";
         const result = cleanerWithBadRegex.clean(url);
 
-        // Should not match the provider due to invalid regex
+        // The URL should remain unchanged because the invalid regex pattern
+        // prevents the provider from being matched
         expect(result.toString()).toBe(url);
         expect(consoleSpy).toHaveBeenCalledWith(
-          "Invalid regex for provider bad-regex.com: [invalid-regex",
+          "Invalid URL regex for provider bad-regex.com: [invalid-regex",
+          expect.any(Error),
         );
-
         consoleSpy.mockRestore();
       });
 
       it("should handle exception patterns with invalid regex", () => {
+        const consoleSpy = jest
+          .spyOn(console, "error")
+          .mockImplementation(() => {});
         const rulesWithInvalidException: ClearUrlRules = {
           providers: {
             "test.com": {
@@ -239,23 +241,19 @@ describe("LinkCleaner", () => {
             },
           },
         };
-
         const cleanerWithBadException = new LinkCleaner(
           rulesWithInvalidException,
         );
-        const consoleSpy = jest
-          .spyOn(console, "error")
-          .mockImplementation(() => {});
-
         const url = "https://test.com/page?track=value";
         const result = cleanerWithBadException.clean(url);
 
-        // Should still remove the tracking parameter since exception regex failed
+        // The parameter should be removed because the invalid exception regex
+        // doesn't prevent the rule from working
         expect(result.toString()).toBe("https://test.com/page");
         expect(consoleSpy).toHaveBeenCalledWith(
-          "Invalid exception regex: [invalid-exception-regex",
+          "Invalid exceptions regex for provider test.com: [invalid-exception-regex",
+          expect.any(Error),
         );
-
         consoleSpy.mockRestore();
       });
     });

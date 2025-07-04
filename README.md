@@ -92,22 +92,38 @@ This is the recommended, high-performance approach for edge environments. It tra
 // In your Cloudflare Worker's main file:
 import { getStreamingHandlers, createMinimalRules } from 'email-scrubber-core';
 
+// Get the sanitization rules and handlers.
+const rules = createMinimalRules();
+const handlers = getStreamingHandlers(rules);
+
+// Helper function to detect if email content is HTML
+function isHtmlContent(content) {
+  // Check for HTML tags (case-insensitive)
+  const htmlRegex = /<\s*[a-zA-Z][^>]*>/i;
+  return htmlRegex.test(content);
+}
+
 export default {
-  async fetch(request: Request): Promise<Response> {
-    // Fetch the original response from your origin.
-    const response = await fetch(request);
-
-    // Get the sanitization rules and handlers.
-    const rules = createMinimalRules();
-    const handlers = getStreamingHandlers(rules);
-
+  async email(message, env, ctx) {
     // Create an HTMLRewriter and attach the handlers.
     const rewriter = new HTMLRewriter()
       .on('a[href]', handlers.linkHandler)
       .on('img', handlers.pixelHandler);
 
-    // Return the transformed response.
-    return rewriter.transform(response);
+    // Create a Response object from the raw email
+    const emailResponse = new Response(message.raw, {
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8'
+      }
+    });
+
+    // Transform the email content
+    const sanitizedResponse = rewriter.transform(emailResponse);
+    const sanitizedContent = await sanitizedResponse.text();
+
+    // Forward the email
+    // I was stupid, I thought cloudflare provided something like this, which it doesn't. Yet.
+    await message.forward("inbox@corp", content=sanitizedContent);
   },
 };
 ```
