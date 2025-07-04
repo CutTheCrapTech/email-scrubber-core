@@ -158,7 +158,7 @@ describe("Enhanced Performance Tests - Email URL Processing", () => {
           `session[a-z]*${i}`,
           `ref[a-zA-Z0-9]*_${i}`,
         ],
-        exceptions: [`keep_${i}`, "essential"],
+        exceptions: [],
         referral: [`aff_${i}`, `partner_${i}`],
       };
     }

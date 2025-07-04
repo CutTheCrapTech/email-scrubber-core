@@ -29,7 +29,7 @@ const mockClearUrlRules: ClearUrlRules = {
     "google.com": {
       urlPattern: "google\\.com",
       rules: ["gclid", "utm_source", "utm_medium", "utm_campaign"],
-      exceptions: ["q"],
+      exceptions: ["^https?:\\/\\/google\\.com\\/search\\?q=important&gclid="], // Proper regex pattern
     },
     "facebook.com": {
       urlPattern: "facebook\\.com",
@@ -91,6 +91,38 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     },
   },
   {
+    name: "should not clean URLs matching an exception pattern",
+    html: '<a href="https://google.com/search?q=important&gclid=123">Important Search</a>',
+    rules: mockClearUrlRules,
+    contains: ['href="https://google.com/search?q=important&gclid=123"'],
+    expectedStats: {
+      urlsCleaned: 0,
+      trackingPixelsRemoved: 0,
+      wasModified: false,
+    },
+  },
+  {
+    name: "should not clean URLs matching an exception pattern - 2",
+    html: '<a href="https://google.com/search?q=important&gclid=123">Important Search</a>',
+    rules: {
+      providers: {
+        "google.com": {
+          urlPattern: "google\\.com",
+          rules: ["gclid", "utm_source", "utm_medium", "utm_campaign"],
+          exceptions: [
+            "^https:\\/\\/google\\.com\\/search\\?q=important&gclid=123$",
+          ], // Exact match regex
+        },
+      },
+    },
+    contains: ['href="https://google.com/search?q=important&gclid=123"'],
+    expectedStats: {
+      urlsCleaned: 0,
+      trackingPixelsRemoved: 0,
+      wasModified: false,
+    },
+  },
+  {
     name: "should clean multiple URLs in the same document",
     html: `
         <div>
@@ -101,11 +133,11 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
       `,
     rules: mockClearUrlRules,
     contains: [
-      "https://google.com/page1",
-      "https://facebook.com/page2",
-      "https://example.com/clean",
+      'href="https://google.com/page1"' /* gclid removed */,
+      'href="https://facebook.com/page2"' /* fbclid removed */,
+      'href="https://example.com/clean"' /* unchanged */,
     ],
-    notContains: ["gclid", "fbclid"],
+    notContains: ["gclid=", "fbclid="],
     expectedStats: {
       urlsCleaned: 2,
       trackingPixelsRemoved: 0,
@@ -216,11 +248,11 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
       `,
     rules: mockClearUrlRules,
     contains: [
-      "https://google.com/page",
-      "example.com/clean",
-      "example.com/image.jpg",
+      'href="https://google.com/page"' /* gclid removed */,
+      'href="https://example.com/clean"' /* unchanged */,
+      'alt="Real image"' /* legitimate image preserved */,
     ],
-    notContains: ["gclid", "google-analytics.com"],
+    notContains: ["gclid=", "google-analytics.com"],
     expectedStats: {
       urlsCleaned: 1,
       trackingPixelsRemoved: 1,
@@ -255,17 +287,17 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     `,
     rules: mockClearUrlRules,
     contains: [
-      "https://google.com/products",
-      "https://facebook.com/page",
+      'href="https://google.com/products"' /* utm_source, gclid removed */,
+      'href="https://facebook.com/page?utm_medium=social"' /* fbclid removed */,
       "product1.jpg",
       "product2.jpg",
       "Newsletter",
       "latest products",
     ],
     notContains: [
-      "utm_source",
-      "gclid",
-      "fbclid",
+      "utm_source=newsletter",
+      "gclid=",
+      "fbclid=",
       "google-analytics.com",
       "facebook.com/tr",
       "mailchimp.com",
@@ -449,12 +481,16 @@ export const sanitizerTestCases: SanitizerTestCase[] = [
     html: `
       <div>
         <p>Special chars: àáâãäåæçèéêë</p>
-        <a href="https://google.com/search?q=test%20query&gclid=123">Search Query</a>
+        <a href="https://google.com/somepath?q=test%20query&gclid=123">Search Query</a>
         <img src="https://example.com/image.jpg?param=value%20with%20spaces" alt="Image with spaces">
       </div>
     `,
     rules: mockClearUrlRules,
-    contains: ["àáâãäåæçèéêë", "test+query"],
+    contains: [
+      "àáâãäåæçèéêë",
+      'href="https://google.com/somepath?q=test+query"',
+      'src="https://example.com/image.jpg?param=value%20with%20spaces"',
+    ],
     notContains: ["gclid"],
     expectedStats: {
       urlsCleaned: 1,

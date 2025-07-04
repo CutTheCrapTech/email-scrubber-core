@@ -13,8 +13,8 @@ interface ProviderRule {
   rules: string[];
 
   /**
-   * An array of regex patterns. If a parameter matches one of these,
-   * it will NOT be removed, even if it's in the `rules` list.
+   * An array of regex patterns. If a URL matches one of these,
+   * the provider rules will not be applied.
    */
   exceptions?: string[];
 
@@ -48,10 +48,10 @@ export interface ClearUrlRules {
  */
 interface CachedProviderRule {
   urlPattern: RegExp | null;
-  rules: RegExp[];
-  exceptions: RegExp[];
-  redirections?: RegExp[];
-  referral?: RegExp[];
+  rules: RegExp | null;
+  exceptions: RegExp | null;
+  redirections: RegExp | null;
+  referral: RegExp | null;
 }
 
 /**
@@ -99,22 +99,26 @@ export class LinkCleaner {
   ): CachedProviderRule {
     return {
       urlPattern: this.compileUrlPattern(providerRules.urlPattern, provider),
-      rules: this.compilePatternArray(providerRules.rules, provider, "rules"),
-      exceptions: this.compilePatternArray(
+      rules: this.compileCombinedPattern(
+        providerRules.rules,
+        provider,
+        "rules",
+      ),
+      exceptions: this.compileCombinedPattern(
         providerRules.exceptions || [],
         provider,
         "exceptions",
       ),
-      redirections: providerRules.redirections
-        ? this.compilePatternArray(
-            providerRules.redirections,
-            provider,
-            "redirections",
-          )
-        : undefined,
-      referral: providerRules.referral
-        ? this.compilePatternArray(providerRules.referral, provider, "referral")
-        : undefined,
+      redirections: this.compileCombinedPattern(
+        providerRules.redirections || [],
+        provider,
+        "redirections",
+      ),
+      referral: this.compileCombinedPattern(
+        providerRules.referral || [],
+        provider,
+        "referral",
+      ),
     };
   }
 
@@ -137,31 +141,32 @@ export class LinkCleaner {
   }
 
   /**
-   * Compiles an array of pattern strings into RegExp objects.
+   * Compiles an array of pattern strings into a single combined RegExp object.
    * @param patterns Array of regex pattern strings.
    * @param provider The provider identifier for error reporting.
    * @param fieldName The field name for error reporting.
-   * @returns Array of compiled RegExp objects.
+   * @returns A single compiled RegExp object, or null if no patterns are provided.
    */
-  private compilePatternArray(
+  private compileCombinedPattern(
     patterns: string[],
     provider: string,
     fieldName: string,
-  ): RegExp[] {
-    const compiledPatterns: RegExp[] = [];
-
-    for (const pattern of patterns) {
-      try {
-        compiledPatterns.push(new RegExp(pattern, "i"));
-      } catch (error) {
-        console.error(
-          `Invalid ${fieldName} regex for provider ${provider}: ${pattern}`,
-          error,
-        );
-      }
+  ): RegExp | null {
+    if (patterns.length === 0) {
+      return null;
     }
 
-    return compiledPatterns;
+    try {
+      // Combine all patterns into a single regex: (pattern1|pattern2|...)
+      const combined = `(?:${patterns.join("|")})`;
+      return new RegExp(combined, "i");
+    } catch (error) {
+      console.error(
+        `Invalid ${fieldName} regex for provider ${provider}: ${patterns.join(", ")}`,
+        error,
+      );
+      return null;
+    }
   }
 
   /**
@@ -183,8 +188,13 @@ export class LinkCleaner {
       throw new Error(`Invalid URL provided: ${url}`);
     }
 
+    // Early exit if there are no query parameters to clean.
+    if (urlObject.search.length === 0) {
+      return urlObject;
+    }
+
     // Apply the universal default rules first, if they exist.
-    const defaultProvider = this.getProvider("*");
+    const defaultProvider = this.getProvider("globalRules");
     if (defaultProvider) {
       this.cleanParams(urlObject, defaultProvider);
     }
@@ -195,8 +205,8 @@ export class LinkCleaner {
     if (specificProvider) {
       // Handle redirections first, as they often contain the final destination URL.
       if (specificProvider.redirections) {
-        for (const param of urlObject.searchParams.keys()) {
-          if (this.matchesPatternArray(param, specificProvider.redirections)) {
+        for (const param of Array.from(urlObject.searchParams.keys())) {
+          if (this.matchesPattern(param, specificProvider.redirections)) {
             const redirectUrl = urlObject.searchParams.get(param);
             if (redirectUrl) {
               try {
@@ -225,13 +235,18 @@ export class LinkCleaner {
   public findProvider(urlObject: URL): CachedProviderRule | null {
     for (const provider of Object.keys(this.rules.providers)) {
       // Skip the default provider in this lookup, as it's handled separately.
-      if (provider === "*") {
+      if (provider === "globalRules") {
         continue;
       }
 
       // Get pre-compiled provider
       const cachedProvider = this.getProvider(provider);
       if (cachedProvider?.urlPattern?.test(urlObject.href)) {
+        // If a provider matches, check if the URL is an exception.
+        if (this.matchesPattern(urlObject.href, cachedProvider.exceptions)) {
+          // This URL is an exception for this provider, so skip it.
+          continue;
+        }
         return cachedProvider;
       }
     }
@@ -247,28 +262,17 @@ export class LinkCleaner {
     urlObject: URL,
     cachedProvider: CachedProviderRule,
   ): void {
+    // Early exit if the provider has no rules to apply.
+    if (!cachedProvider.rules && !cachedProvider.referral) {
+      return;
+    }
+
     const paramsToDelete: string[] = [];
 
     for (const param of urlObject.searchParams.keys()) {
-      // Test against pre-compiled rules and referral regex patterns
-      let shouldRemove =
-        this.matchesPatternArray(param, cachedProvider.rules) ||
-        (cachedProvider.referral
-          ? this.matchesPatternArray(param, cachedProvider.referral)
-          : false);
-
-      if (shouldRemove) {
-        // Check exceptions if we need to
-        if (cachedProvider.exceptions.length > 0) {
-          const isException = this.matchesPatternArray(
-            param,
-            cachedProvider.exceptions,
-          );
-          if (isException) {
-            shouldRemove = false;
-          }
-        }
-      }
+      const shouldRemove =
+        this.matchesPattern(param, cachedProvider.rules) ||
+        this.matchesPattern(param, cachedProvider.referral);
 
       if (shouldRemove) {
         paramsToDelete.push(param);
@@ -281,12 +285,15 @@ export class LinkCleaner {
   }
 
   /**
-   * Tests if a parameter matches any pattern in an array of compiled regex patterns.
-   * @param param The parameter name to test.
-   * @param patterns Array of compiled RegExp objects.
-   * @returns True if the parameter matches any pattern.
+   * Tests if a string matches a compiled regex pattern.
+   * @param value The string to test.
+   * @param pattern The compiled RegExp object.
+   * @returns True if the string matches the pattern.
    */
-  private matchesPatternArray(param: string, patterns: RegExp[]): boolean {
-    return patterns.some((pattern) => pattern.test(param));
+  private matchesPattern(value: string, pattern: RegExp | null): boolean {
+    if (!pattern) {
+      return false;
+    }
+    return pattern.test(value);
   }
 }
