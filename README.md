@@ -96,13 +96,6 @@ import { getStreamingHandlers, createMinimalRules } from 'email-scrubber-core';
 const rules = createMinimalRules();
 const handlers = getStreamingHandlers(rules);
 
-// Helper function to detect if email content is HTML
-function isHtmlContent(content) {
-  // Check for HTML tags (case-insensitive)
-  const htmlRegex = /<\s*[a-zA-Z][^>]*>/i;
-  return htmlRegex.test(content);
-}
-
 export default {
   async email(message, env, ctx) {
     // Create an HTMLRewriter and attach the handlers.
