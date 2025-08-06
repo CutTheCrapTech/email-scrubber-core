@@ -13,10 +13,10 @@ jobs:
       issues: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
 
       - name: Set up Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        uses: actions/setup-node@5e2628c959b9ade56971c0afcebbe5332d44b398
         with:
           node-version: "lts/*"
           cache: "npm"
@@ -76,7 +76,7 @@ jobs:
         id: create_pr
         # This step only runs if download was successful AND formatting worked AND there are changes
         if: steps.download.outcome == 'success' && steps.format.outcome == 'success' && steps.check_changes.outputs.has_changes == 'true'
-        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
+        uses: peter-evans/create-pull-request@1310d7dab503600742045e6fd4b84dda64352858
         with:
           # GITHUB_TOKEN should now work with proper repository permissions
           token: ${{ secrets.GITHUB_TOKEN }}
